@@ -127,6 +127,19 @@ input[type=text]:focus { outline: 2px solid var(--accent); }
 .status.ok { color: #15803d; }
 .status.err { color: #b91c1c; }
 
+.summary {
+  margin-top: 14px;
+  padding: 10px 14px;
+  background: #f6f1e8;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 14px;
+  color: var(--fg);
+  text-align: center;
+}
+.summary strong { font-weight: 700; }
+.summary .err { color: #b91c1c; }
+
 .link {
   word-break: break-all;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
