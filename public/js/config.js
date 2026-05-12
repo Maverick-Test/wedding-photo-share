@@ -2,7 +2,7 @@
 // Example: "https://photo-share.your-subdomain.workers.dev"
 window.PHOTO_SHARE_CONFIG = {
   workerUrl: "https://photo-share.josumah.workers.dev",
-  defaultAlbum: "default",
+  defaultAlbum: "osumah-wedding-pictures",
   // Polling interval (ms) for the live gallery
   galleryRefreshMs: 8000,
   // Max upload size enforced client-side (bytes). Default 50 MB.
