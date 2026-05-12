@@ -1,7 +1,7 @@
 // Edit this after you deploy your Cloudflare Worker.
 // Example: "https://photo-share.your-subdomain.workers.dev"
 window.PHOTO_SHARE_CONFIG = {
-  workerUrl: "https://REPLACE-ME.workers.dev",
+  workerUrl: "https://photo-share.josumah.workers.dev",
   defaultAlbum: "default",
   // Polling interval (ms) for the live gallery
   galleryRefreshMs: 8000,
