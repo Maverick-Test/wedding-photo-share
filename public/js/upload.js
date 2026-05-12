@@ -7,6 +7,8 @@
 
   const picker = document.getElementById("picker");
   const pickerLabel = document.getElementById("pickerLabel");
+  const cameraPicker = document.getElementById("cameraPicker");
+  const cameraPickerLabel = document.getElementById("cameraPickerLabel");
   const queueEl = document.getElementById("queue");
   const uploadBtn = document.getElementById("uploadBtn");
   const statusEl = document.getElementById("status");
@@ -22,14 +24,15 @@
       if (s && s.uploadsOpen === false) {
         closedBanner.classList.remove("hidden");
         pickerLabel.style.display = "none";
+        if (cameraPickerLabel) cameraPickerLabel.style.display = "none";
         uploadBtn.style.display = "none";
         closedGalleryLink.href = `gallery.html?album=${encodeURIComponent(album)}`;
       }
     })
     .catch(() => {});
 
-  picker.addEventListener("change", () => {
-    const files = Array.from(picker.files || []);
+  function handlePicked(input) {
+    const files = Array.from(input.files || []);
     for (const f of files) {
       if (f.size > cfg.maxFileSize) {
         addRow(f, "err", `Too big (${humanSize(f.size)})`);
@@ -39,7 +42,11 @@
       addRow(f, "pending", "Ready");
     }
     uploadBtn.disabled = queue.length === 0;
-  });
+    input.value = "";
+  }
+
+  picker.addEventListener("change", () => handlePicked(picker));
+  if (cameraPicker) cameraPicker.addEventListener("change", () => handlePicked(cameraPicker));
 
   uploadBtn.addEventListener("click", async () => {
     if (queue.length === 0) return;
@@ -71,6 +78,7 @@
     queue = [];
     uploadBtn.disabled = true;
     picker.value = "";
+    if (cameraPicker) cameraPicker.value = "";
   });
 
   async function uploadOne(file, album) {

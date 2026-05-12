@@ -2,6 +2,12 @@ name = "photo-share"
 main = "src/index.js"
 compatibility_date = "2024-09-01"
 
+# Cron triggers (UTC):
+#   0 3 24 * *  -> 7-day warning before cleanup (deletes happen on the 1st)
+#   0 3 1  * *  -> monthly cleanup
+[triggers]
+crons = ["0 3 24 * *", "0 3 1 * *"]
+
 # Replace with your Pages site origin (e.g. "https://maverick-test.github.io")
 # Comma-separated list is supported. Leave "*" only while testing.
 [vars]
@@ -19,6 +25,12 @@ UPLOAD_DEADLINE = "2026-05-23T03:59:59Z"  # = May 22, 2026 11:59 PM ET (7 days a
 # "off"     : never auto-delete
 CLEANUP_MODE = "month"
 CLEANUP_RETENTION_DAYS = "60"
+
+# Email notifications via Resend (https://resend.com). Free 100 emails/day.
+# Set the API key as a secret:  cd worker && npx wrangler secret put RESEND_API_KEY
+# Leave NOTIFY_EMAIL empty to disable email notifications.
+NOTIFY_EMAIL = ""
+NOTIFY_FROM  = "Photo Share <onboarding@resend.dev>"  # change once you verify your own domain
 
 [[r2_buckets]]
 binding = "PHOTOS"

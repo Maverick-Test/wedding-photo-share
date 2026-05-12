@@ -44,9 +44,42 @@ export default {
   },
 
   async scheduled(event, env, ctx) {
-    ctx.waitUntil(runCleanup(env, event.scheduledTime));
+    // Two crons share this handler — branch on event.cron.
+    // "0 3 24 * *" => 7-day warning. "0 3 1 * *" => actual cleanup.
+    if (event.cron && event.cron.startsWith("0 3 24")) {
+      ctx.waitUntil(runWarning(env, event.scheduledTime));
+    } else {
+      ctx.waitUntil(runCleanup(env, event.scheduledTime));
+    }
   },
 };
+
+async function runWarning(env, scheduledTime) {
+  const mode = (env.CLEANUP_MODE || "month").toLowerCase();
+  if (mode === "off") return;
+
+  const now = new Date(scheduledTime || Date.now());
+  // The cleanup that runs ~7 days from now uses next-month's 1st as `now`.
+  const nextRun = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1, 3, 0, 0));
+  const cutoff = computeCutoff(mode, env, nextRun);
+  if (!cutoff) return;
+
+  const { count, bytes } = await summarizeOlderThan(env, cutoff);
+  if (count === 0) {
+    console.log("[warning] nothing scheduled for deletion, skipping email");
+    return;
+  }
+
+  const subject = `⚠️ Photo Share: ${count} item(s) will be deleted on ${nextRun.toISOString().slice(0,10)}`;
+  const body =
+    `Heads up — your scheduled cleanup runs on ${nextRun.toUTCString()}.\n\n` +
+    `Items to be deleted: ${count}\n` +
+    `Estimated size:      ${humanSize(bytes)}\n` +
+    `Cutoff date:         everything uploaded before ${cutoff.toISOString()}\n\n` +
+    `If you want to keep these photos, download the album as a ZIP from your gallery page before then.\n\n` +
+    `To cancel auto-cleanup, set CLEANUP_MODE = "off" in worker/wrangler.toml and redeploy.`;
+  await sendEmail(env, subject, body);
+}
 
 async function runCleanup(env, scheduledTime) {
   const mode = (env.CLEANUP_MODE || "month").toLowerCase();
@@ -81,6 +114,72 @@ async function runCleanup(env, scheduledTime) {
   } while (cursor);
 
   console.log(`[cleanup] done. scanned=${scanned} deleted=${deleted}`);
+
+  if (deleted > 0) {
+    const subject = `✅ Photo Share: ${deleted} item(s) deleted in monthly cleanup`;
+    const body =
+      `Monthly cleanup ran at ${now.toUTCString()}.\n\n` +
+      `Mode:    ${mode}\n` +
+      `Cutoff:  ${cutoff.toISOString()}\n` +
+      `Scanned: ${scanned}\n` +
+      `Deleted: ${deleted}\n`;
+    await sendEmail(env, subject, body);
+  }
+}
+
+async function summarizeOlderThan(env, cutoff) {
+  let cursor;
+  let count = 0;
+  let bytes = 0;
+  do {
+    const page = await env.PHOTOS.list({ limit: 1000, cursor });
+    for (const o of page.objects) {
+      if (o.uploaded && new Date(o.uploaded) < cutoff) {
+        count++;
+        bytes += o.size || 0;
+      }
+    }
+    cursor = page.truncated ? page.cursor : undefined;
+  } while (cursor);
+  return { count, bytes };
+}
+
+async function sendEmail(env, subject, body) {
+  const to = (env.NOTIFY_EMAIL || "").trim();
+  const apiKey = (env.RESEND_API_KEY || "").trim();
+  if (!to) {
+    console.log("[email] NOTIFY_EMAIL not set, skipping");
+    return;
+  }
+  if (!apiKey) {
+    console.log("[email] RESEND_API_KEY not set, skipping. Run: npx wrangler secret put RESEND_API_KEY");
+    return;
+  }
+  const from = (env.NOTIFY_FROM || "Photo Share <onboarding@resend.dev>").trim();
+  try {
+    const r = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ from, to, subject, text: body }),
+    });
+    if (!r.ok) {
+      console.error(`[email] send failed: HTTP ${r.status} ${await r.text()}`);
+    } else {
+      console.log(`[email] sent to ${to}: ${subject}`);
+    }
+  } catch (err) {
+    console.error(`[email] error: ${err.message}`);
+  }
+}
+
+function humanSize(n) {
+  const u = ["B", "KB", "MB", "GB"];
+  let i = 0;
+  while (n >= 1024 && i < u.length - 1) { n /= 1024; i++; }
+  return `${n.toFixed(n < 10 && i > 0 ? 1 : 0)} ${u[i]}`;
 }
 
 function computeCutoff(mode, env, now) {

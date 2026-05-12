@@ -17,9 +17,14 @@
     </div>
 
     <label for="picker" class="btn primary block" id="pickerLabel">
-      📷 Pick photos or videos
+      �️ Choose from library
     </label>
-    <input id="picker" type="file" accept="image/*,video/*" multiple capture="environment" hidden />
+    <input id="picker" type="file" accept="image/*,video/*" multiple hidden />
+
+    <label for="cameraPicker" class="btn block" id="cameraPickerLabel">
+      📷 Take a photo or video
+    </label>
+    <input id="cameraPicker" type="file" accept="image/*,video/*" capture="environment" hidden />
 
     <ul id="queue" class="queue"></ul>
 

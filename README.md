@@ -105,7 +105,14 @@ On `/gallery.html`, click **⬇️ Download all**. This streams every photo + vi
 
 ## Auto-cleanup
 
-A Cloudflare Cron Trigger runs at **03:00 UTC on the 1st of every month** and deletes old photos. Configure in [worker/wrangler.toml](worker/wrangler.toml):
+Two Cloudflare Cron Triggers run monthly:
+
+| When (UTC) | What it does |
+|---|---|
+| 03:00 on the **24th** | Sends a 7-day warning email listing items scheduled for deletion |
+| 03:00 on the **1st**  | Runs the cleanup and emails a summary of what was deleted |
+
+Configure cleanup behaviour in [worker/wrangler.toml](worker/wrangler.toml):
 
 ```toml
 CLEANUP_MODE = "month"   # delete anything older than the start of the previous month (~30+ day retention)
@@ -116,7 +123,26 @@ CLEANUP_RETENTION_DAYS = "60"
 CLEANUP_MODE = "off"     # never auto-delete
 ```
 
-With the default `"month"` setting, photos uploaded May 15 are kept through June and deleted on July 1. View cleanup logs with:
+### Email notifications (Resend)
+
+Notifications use [Resend](https://resend.com) (free: 100 emails/day, no credit card).
+
+1. Sign up at https://resend.com → **API Keys** → **Create**
+2. Set the key as a Worker secret (it's encrypted, never stored in git):
+   ```bash
+   cd worker && npx wrangler secret put RESEND_API_KEY
+   ```
+3. Set your destination email in [worker/wrangler.toml](worker/wrangler.toml):
+   ```toml
+   NOTIFY_EMAIL = "you@example.com"
+   ```
+4. Redeploy: `npx wrangler deploy`
+
+The default `NOTIFY_FROM` uses Resend's shared sandbox domain (`onboarding@resend.dev`), which works immediately but may go to spam. To use your own address, verify a domain in Resend and update `NOTIFY_FROM`.
+
+Leave `NOTIFY_EMAIL = ""` to disable emails entirely — cleanup still runs.
+
+View cleanup logs in real time:
 
 ```bash
 cd worker && npx wrangler tail
