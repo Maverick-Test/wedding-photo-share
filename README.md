@@ -103,6 +103,27 @@ On `/gallery.html`, click **⬇️ Download all**. This streams every photo + vi
 
 ---
 
+## Auto-cleanup
+
+A Cloudflare Cron Trigger runs at **03:00 UTC on the 1st of every month** and deletes old photos. Configure in [worker/wrangler.toml](worker/wrangler.toml):
+
+```toml
+CLEANUP_MODE = "month"   # delete anything older than the start of the previous month (~30+ day retention)
+# or:
+CLEANUP_MODE = "days"
+CLEANUP_RETENTION_DAYS = "60"
+# or:
+CLEANUP_MODE = "off"     # never auto-delete
+```
+
+With the default `"month"` setting, photos uploaded May 15 are kept through June and deleted on July 1. View cleanup logs with:
+
+```bash
+cd worker && npx wrangler tail
+```
+
+---
+
 ## Closing uploads after the event
 
 Set `UPLOAD_DEADLINE` in [worker/wrangler.toml](worker/wrangler.toml) to an ISO 8601 UTC timestamp:

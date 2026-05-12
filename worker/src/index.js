@@ -4,6 +4,8 @@
 //   GET  /list?album=<id>       returns { items: [{ key, url, contentType, size, uploaded }] }
 //   GET  /photo/<key...>        streams an object from R2 (used when PUBLIC_BASE_URL is empty)
 //   GET  /status                returns { uploadsOpen, deadline }
+// Cron:
+//   scheduled() runs monthly cleanup, deleting old objects from R2.
 //
 // Storage layout: <album>/<yyyy-mm-dd>/<uuid>.<ext>
 
@@ -40,7 +42,57 @@ export default {
       return withCors(json({ error: err.message || "server error" }, 500), cors);
     }
   },
+
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(runCleanup(env, event.scheduledTime));
+  },
 };
+
+async function runCleanup(env, scheduledTime) {
+  const mode = (env.CLEANUP_MODE || "month").toLowerCase();
+  if (mode === "off") {
+    console.log("[cleanup] disabled");
+    return;
+  }
+
+  const now = new Date(scheduledTime || Date.now());
+  const cutoff = computeCutoff(mode, env, now);
+  if (!cutoff) {
+    console.log("[cleanup] no cutoff computed, skipping");
+    return;
+  }
+  console.log(`[cleanup] mode=${mode} cutoff=${cutoff.toISOString()}`);
+
+  let cursor;
+  let scanned = 0;
+  let deleted = 0;
+  do {
+    const page = await env.PHOTOS.list({ limit: 1000, cursor });
+    const toDelete = page.objects
+      .filter((o) => o.uploaded && new Date(o.uploaded) < cutoff)
+      .map((o) => o.key);
+    scanned += page.objects.length;
+    if (toDelete.length > 0) {
+      await env.PHOTOS.delete(toDelete);
+      deleted += toDelete.length;
+      console.log(`[cleanup] deleted batch of ${toDelete.length}`);
+    }
+    cursor = page.truncated ? page.cursor : undefined;
+  } while (cursor);
+
+  console.log(`[cleanup] done. scanned=${scanned} deleted=${deleted}`);
+}
+
+function computeCutoff(mode, env, now) {
+  if (mode === "days") {
+    const days = Number(env.CLEANUP_RETENTION_DAYS || 60);
+    if (!Number.isFinite(days) || days <= 0) return null;
+    return new Date(now.getTime() - days * 86400 * 1000);
+  }
+  // "month": delete anything uploaded before the start of the previous month.
+  // e.g. on June 1, delete anything from before May 1.
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1, 0, 0, 0));
+}
 
 function handleStatus(env) {
   const deadline = (env.UPLOAD_DEADLINE || "").trim();

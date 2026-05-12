@@ -13,6 +13,13 @@ MAX_UPLOAD_BYTES = "52428800" # 50 MB
 # Leave empty to allow uploads forever. Format: "2026-06-15T23:59:59Z"
 UPLOAD_DEADLINE = "2026-05-23T03:59:59Z"  # = May 22, 2026 11:59 PM ET (7 days after May 15)
 
+# Auto-cleanup behaviour. Runs via the cron trigger above.
+# "month"   : on the 1st of each month, delete objects uploaded before the start of the previous month (gives ~30+ days retention)
+# "days"    : delete objects uploaded more than CLEANUP_RETENTION_DAYS ago
+# "off"     : never auto-delete
+CLEANUP_MODE = "month"
+CLEANUP_RETENTION_DAYS = "60"
+
 [[r2_buckets]]
 binding = "PHOTOS"
 bucket_name = "photo-share"
