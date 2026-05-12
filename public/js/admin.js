@@ -23,13 +23,22 @@
     galleryLinkEl.textContent = galleryUrl;
 
     qrEl.innerHTML = "";
-    const canvas = document.createElement("canvas");
-    qrEl.appendChild(canvas);
-    QRCode.toCanvas(canvas, uploadUrl, { width: 320, margin: 2 }, (err) => {
-      if (err) console.error(err);
-      dlBtn.href = canvas.toDataURL("image/png");
-      dlBtn.download = `album-${album}-qr.png`;
+    new QRCode(qrEl, {
+      text: uploadUrl,
+      width: 320,
+      height: 320,
+      correctLevel: QRCode.CorrectLevel.M,
     });
+
+    // qrcodejs renders both a <canvas> (preferred) and an <img> fallback.
+    // Wait a tick so the canvas is in the DOM, then wire up the download link.
+    setTimeout(() => {
+      const canvas = qrEl.querySelector("canvas");
+      const img = qrEl.querySelector("img");
+      const dataUrl = canvas ? canvas.toDataURL("image/png") : (img ? img.src : "");
+      dlBtn.href = dataUrl;
+      dlBtn.download = `album-${album}-qr.png`;
+    }, 0);
 
     out.classList.remove("hidden");
   });
