@@ -9,14 +9,19 @@
 <body class="dark">
   <header class="gallery-header">
     <h1 id="albumTitle">📸 Live Album</h1>
-    <span id="count" class="muted"></span>
+    <div class="gallery-actions">
+      <span id="count" class="muted"></span>
+      <a id="slideshowLink" class="btn small" href="#">▶️ Slideshow</a>
+      <button id="downloadAllBtn" class="btn small" disabled>⬇️ Download all</button>
+    </div>
   </header>
+  <p id="downloadStatus" class="download-status hidden"></p>
   <section id="grid" class="grid"></section>
   <div id="empty" class="empty hidden">
     <p>No photos yet. Be the first to share!</p>
   </div>
 
+  <script type="module" src="js/gallery.js"></script>
   <script src="js/config.js"></script>
-  <script src="js/gallery.js"></script>
 </body>
 </html>

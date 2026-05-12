@@ -12,7 +12,8 @@ A self-hosted, QR-code-driven shared photo album for weddings and events.
 | Page | What it does |
 |------|-------------|
 | `/upload.html?album=<id>` | Mobile-friendly uploader. This is what guests scan into. |
-| `/gallery.html?album=<id>` | Live, auto-refreshing photo wall. Open this on the TV. |
+| `/gallery.html?album=<id>` | Live, auto-refreshing photo wall. Includes a "Download all as ZIP" button. |
+| `/slideshow.html?album=<id>` | Full-screen single-photo slideshow. Designed for AirPlay → Apple TV. |
 | `/admin.html` | Generates an `upload.html` URL + downloadable QR PNG for an album. |
 
 ## How it fits together
@@ -81,7 +82,24 @@ In the repo on GitHub → **Settings → Pages → Build and deployment**: set *
 3. Click **Generate**, then **Download QR (PNG)**
 4. Print it on table cards or signage
 
-Open `https://<your-pages-url>/gallery.html?album=james-and-anne-wedding` on the TV for the live slideshow.
+Open `…/gallery.html?album=james-and-anne-wedding` on the TV for the live photo wall — or `…/slideshow.html?album=james-and-anne-wedding` for a full-screen single-photo slideshow.
+
+### Putting the slideshow on Apple TV
+
+Apple TV doesn't have a browser, so use **AirPlay mirroring** from a Mac or iPhone:
+
+1. Open `…/slideshow.html?album=<your-album>` in Safari on your Mac (or iPhone)
+2. Click anywhere on the page to enter full-screen (or press <kbd>F</kbd>)
+3. Control Center → **Screen Mirroring** → pick your Apple TV
+4. The slideshow auto-advances every 5 seconds and pulls in new photos as guests upload
+
+To change the slide interval, add `&interval=8000` to the URL (8 seconds, etc.).
+
+---
+
+## Downloading all photos after the event
+
+On `/gallery.html`, click **⬇️ Download all**. This streams every photo + video into a single zip in your browser — no server load, works for thousands of files.
 
 ---
 

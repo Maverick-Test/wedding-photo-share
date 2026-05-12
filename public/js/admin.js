@@ -18,9 +18,11 @@
     const base = location.origin + location.pathname.replace(/admin\.html$/, "");
     const uploadUrl = `${base}upload.html?album=${encodeURIComponent(album)}`;
     const galleryUrl = `${base}gallery.html?album=${encodeURIComponent(album)}`;
+    const slideshowUrl = `${base}slideshow.html?album=${encodeURIComponent(album)}`;
 
     uploadLinkEl.textContent = uploadUrl;
     galleryLinkEl.textContent = galleryUrl;
+    document.getElementById("slideshowLink").textContent = slideshowUrl;
 
     qrEl.innerHTML = "";
     new QRCode(qrEl, {
