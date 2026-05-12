@@ -89,6 +89,18 @@ input[type=text]:focus { outline: 2px solid var(--accent); }
 
 .stack { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
 
+.banner {
+  margin: 16px 0;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  color: #78350f;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.banner a { color: #78350f; font-weight: 600; margin-left: 8px; }
+
 .queue {
   list-style: none;
   padding: 0;

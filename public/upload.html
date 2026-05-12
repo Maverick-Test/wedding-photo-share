@@ -11,7 +11,12 @@
     <h1>📸 Share your photos</h1>
     <p id="albumLabel" class="muted">Loading album…</p>
 
-    <label for="picker" class="btn primary block">
+    <div id="closedBanner" class="banner hidden">
+      📷 Uploads are closed. Thanks for celebrating with us!
+      <a id="closedGalleryLink" href="#">View the gallery →</a>
+    </div>
+
+    <label for="picker" class="btn primary block" id="pickerLabel">
       📷 Pick photos or videos
     </label>
     <input id="picker" type="file" accept="image/*,video/*" multiple capture="environment" hidden />

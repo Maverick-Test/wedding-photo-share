@@ -6,11 +6,27 @@
   document.getElementById("albumLabel").textContent = `Album: ${album}`;
 
   const picker = document.getElementById("picker");
+  const pickerLabel = document.getElementById("pickerLabel");
   const queueEl = document.getElementById("queue");
   const uploadBtn = document.getElementById("uploadBtn");
   const statusEl = document.getElementById("status");
+  const closedBanner = document.getElementById("closedBanner");
+  const closedGalleryLink = document.getElementById("closedGalleryLink");
 
   let queue = [];
+
+  // Check upload window
+  fetch(`${cfg.workerUrl.replace(/\/$/, "")}/status`, { cache: "no-store" })
+    .then(r => r.ok ? r.json() : null)
+    .then(s => {
+      if (s && s.uploadsOpen === false) {
+        closedBanner.classList.remove("hidden");
+        pickerLabel.style.display = "none";
+        uploadBtn.style.display = "none";
+        closedGalleryLink.href = `gallery.html?album=${encodeURIComponent(album)}`;
+      }
+    })
+    .catch(() => {});
 
   picker.addEventListener("change", () => {
     const files = Array.from(picker.files || []);

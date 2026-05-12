@@ -3,6 +3,7 @@
 //   POST /upload?album=<id>     multipart/form-data, field "file"
 //   GET  /list?album=<id>       returns { items: [{ key, url, contentType, size, uploaded }] }
 //   GET  /photo/<key...>        streams an object from R2 (used when PUBLIC_BASE_URL is empty)
+//   GET  /status                returns { uploadsOpen, deadline }
 //
 // Storage layout: <album>/<yyyy-mm-dd>/<uuid>.<ext>
 
@@ -27,6 +28,9 @@ export default {
       if (url.pathname.startsWith("/photo/") && request.method === "GET") {
         return withCors(await handlePhoto(request, env, url), cors);
       }
+      if (url.pathname === "/status" && request.method === "GET") {
+        return withCors(handleStatus(env), cors);
+      }
       if (url.pathname === "/" || url.pathname === "/health") {
         return withCors(json({ ok: true, service: "photo-share" }), cors);
       }
@@ -38,7 +42,24 @@ export default {
   },
 };
 
+function handleStatus(env) {
+  const deadline = (env.UPLOAD_DEADLINE || "").trim();
+  const open = uploadsOpen(env);
+  return json({ uploadsOpen: open, deadline: deadline || null });
+}
+
+function uploadsOpen(env) {
+  const deadline = (env.UPLOAD_DEADLINE || "").trim();
+  if (!deadline) return true;
+  const t = Date.parse(deadline);
+  if (Number.isNaN(t)) return true; // misconfigured = fail open
+  return Date.now() < t;
+}
+
 async function handleUpload(request, env, url) {
+  if (!uploadsOpen(env)) {
+    return json({ error: "uploads closed", deadline: env.UPLOAD_DEADLINE || null }, 403);
+  }
   const album = readAlbum(url);
   const max = Number(env.MAX_UPLOAD_BYTES || 50 * 1024 * 1024);
 

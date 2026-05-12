@@ -85,6 +85,25 @@ Open `https://<your-pages-url>/gallery.html?album=james-and-anne-wedding` on the
 
 ---
 
+## Closing uploads after the event
+
+Set `UPLOAD_DEADLINE` in [worker/wrangler.toml](worker/wrangler.toml) to an ISO 8601 UTC timestamp:
+
+```toml
+UPLOAD_DEADLINE = "2026-06-15T23:59:59Z"
+```
+
+Redeploy: `cd worker && npx wrangler deploy`.
+
+After that timestamp:
+- New uploads return HTTP 403 with `{ "error": "uploads closed" }`.
+- The upload page shows a friendly "uploads closed" banner with a gallery link.
+- The live gallery and existing photos continue to work normally.
+
+Leave `UPLOAD_DEADLINE = ""` (empty) to allow uploads forever.
+
+---
+
 ## Optional: serve photos directly from R2 (skip the Worker for downloads)
 
 By default, photos are streamed through the Worker (`/photo/<key>`). For higher traffic, attach a custom domain to the bucket and set `PUBLIC_BASE_URL` in `wrangler.toml`:
