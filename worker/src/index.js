@@ -149,11 +149,11 @@ async function sendEmail(env, subject, body) {
   const apiKey = (env.RESEND_API_KEY || "").trim();
   if (!to) {
     console.log("[email] NOTIFY_EMAIL not set, skipping");
-    return;
+    return { sent: false, reason: "NOTIFY_EMAIL not set" };
   }
   if (!apiKey) {
     console.log("[email] RESEND_API_KEY not set, skipping. Run: npx wrangler secret put RESEND_API_KEY");
-    return;
+    return { sent: false, reason: "RESEND_API_KEY not set" };
   }
   const from = (env.NOTIFY_FROM || "Photo Share <onboarding@resend.dev>").trim();
   try {
@@ -165,13 +165,16 @@ async function sendEmail(env, subject, body) {
       },
       body: JSON.stringify({ from, to, subject, text: body }),
     });
+    const respBody = await r.text();
     if (!r.ok) {
-      console.error(`[email] send failed: HTTP ${r.status} ${await r.text()}`);
-    } else {
-      console.log(`[email] sent to ${to}: ${subject}`);
+      console.error(`[email] send failed: HTTP ${r.status} ${respBody}`);
+      return { sent: false, status: r.status, body: respBody.slice(0, 300) };
     }
+    console.log(`[email] sent to ${to}: ${subject}`);
+    return { sent: true, to, status: r.status };
   } catch (err) {
     console.error(`[email] error: ${err.message}`);
+    return { sent: false, error: err.message };
   }
 }
 
