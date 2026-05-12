@@ -29,7 +29,7 @@ CLEANUP_RETENTION_DAYS = "60"
 # Email notifications via Resend (https://resend.com). Free 100 emails/day.
 # Set the API key as a secret:  cd worker && npx wrangler secret put RESEND_API_KEY
 # Leave NOTIFY_EMAIL empty to disable email notifications.
-NOTIFY_EMAIL = ""
+NOTIFY_EMAIL = "josumah@gmail.com"   # or wherever
 NOTIFY_FROM  = "Photo Share <onboarding@resend.dev>"  # change once you verify your own domain
 
 [[r2_buckets]]
