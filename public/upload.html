@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Upload to the Album</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="card narrow">
+    <h1>📸 Share your photos</h1>
+    <p id="albumLabel" class="muted">Loading album…</p>
+
+    <label for="picker" class="btn primary block">
+      📷 Pick photos or videos
+    </label>
+    <input id="picker" type="file" accept="image/*,video/*" multiple capture="environment" hidden />
+
+    <ul id="queue" class="queue"></ul>
+
+    <button id="uploadBtn" class="btn primary block" disabled>Upload</button>
+    <p id="status" class="status"></p>
+
+    <p class="muted small">
+      Photos are shared with everyone at the event. Be kind. ❤️
+    </p>
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/upload.js"></script>
+</body>
+</html>

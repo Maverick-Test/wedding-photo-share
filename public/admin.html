@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QR Code Generator</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+</head>
+<body>
+  <main class="card narrow">
+    <h1>🎟️ Album QR Generator</h1>
+    <p class="muted">
+      Pick an album name (or leave the default). Print the QR code and put it
+      on a table card so guests can scan and upload.
+    </p>
+
+    <label for="albumInput">Album name</label>
+    <input id="albumInput" type="text" placeholder="e.g. james-and-anne-wedding" />
+
+    <button id="genBtn" class="btn primary block">Generate</button>
+
+    <div id="output" class="hidden">
+      <h2>Upload page</h2>
+      <p class="link" id="uploadLink"></p>
+      <div id="qr" class="qr"></div>
+      <a id="downloadQr" class="btn block" download="album-qr.png">⬇️ Download QR (PNG)</a>
+
+      <h2>Live gallery (for the TV)</h2>
+      <p class="link" id="galleryLink"></p>
+    </div>
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>
