@@ -48,6 +48,55 @@
   picker.addEventListener("change", () => handlePicked(picker));
   if (cameraPicker) cameraPicker.addEventListener("change", () => handlePicked(cameraPicker));
 
+  // Paste support: Cmd/Ctrl+V an image from the clipboard
+  document.addEventListener("paste", (e) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    const files = [];
+    for (const it of items) {
+      if (it.kind === "file") {
+        const f = it.getAsFile();
+        if (f) {
+          // Clipboard images often have no name — give them one
+          if (!f.name || f.name === "image.png") {
+            const ts = new Date().toISOString().replace(/[:.]/g, "-");
+            const ext = (f.type.split("/")[1] || "png").split("+")[0];
+            files.push(new File([f], `pasted-${ts}.${ext}`, { type: f.type }));
+          } else {
+            files.push(f);
+          }
+        }
+      }
+    }
+    if (files.length === 0) return;
+    e.preventDefault();
+    handleFiles(files);
+  });
+
+  // Drag-and-drop support
+  ["dragenter", "dragover"].forEach(ev => {
+    document.addEventListener(ev, (e) => { e.preventDefault(); document.body.classList.add("drag-over"); });
+  });
+  ["dragleave", "drop"].forEach(ev => {
+    document.addEventListener(ev, (e) => { e.preventDefault(); document.body.classList.remove("drag-over"); });
+  });
+  document.addEventListener("drop", (e) => {
+    const files = Array.from(e.dataTransfer?.files || []);
+    if (files.length) handleFiles(files);
+  });
+
+  function handleFiles(files) {
+    for (const f of files) {
+      if (f.size > cfg.maxFileSize) {
+        addRow(f, "err", `Too big (${humanSize(f.size)})`);
+        continue;
+      }
+      queue.push(f);
+      addRow(f, "pending", "Ready");
+    }
+    uploadBtn.disabled = queue.length === 0;
+  }
+
   uploadBtn.addEventListener("click", async () => {
     if (queue.length === 0) return;
     uploadBtn.disabled = true;
