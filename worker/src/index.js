@@ -25,7 +25,7 @@ export default {
       if (url.pathname === "/list" && request.method === "GET") {
         return withCors(await handleList(request, env, url), cors);
       }
-      if (url.pathname.startsWith("/photo/") && request.method === "GET") {
+      if (url.pathname.startsWith("/photo/") && (request.method === "GET" || request.method === "HEAD")) {
         return withCors(await handlePhoto(request, env, url), cors);
       }
       if (url.pathname === "/status" && request.method === "GET") {
@@ -100,7 +100,7 @@ async function handleList(request, env, url) {
   const album = readAlbum(url);
   const limit = Math.min(Number(url.searchParams.get("limit") || 500), 1000);
 
-  const list = await env.PHOTOS.list({ prefix: `${album}/`, limit });
+  const list = await env.PHOTOS.list({ prefix: `${album}/`, limit, include: ["httpMetadata"] });
   const items = list.objects.map((o) => ({
     key: o.key,
     url: publicUrl(env, url, o.key),
@@ -115,6 +115,17 @@ async function handleList(request, env, url) {
 async function handlePhoto(request, env, url) {
   const key = decodeURIComponent(url.pathname.replace(/^\/photo\//, ""));
   if (!key || key.includes("..")) return json({ error: "bad key" }, 400);
+
+  if (request.method === "HEAD") {
+    const head = await env.PHOTOS.head(key);
+    if (!head) return json({ error: "not found" }, 404);
+    const headers = new Headers();
+    head.writeHttpMetadata(headers);
+    headers.set("etag", head.httpEtag);
+    headers.set("content-length", String(head.size));
+    headers.set("cache-control", "public, max-age=86400");
+    return new Response(null, { headers });
+  }
 
   const obj = await env.PHOTOS.get(key);
   if (!obj) return json({ error: "not found" }, 404);
@@ -169,7 +180,7 @@ function corsHeaders(request, env) {
     : (allowed.includes(origin) ? origin : allowed[0] || "");
   return {
     "Access-Control-Allow-Origin": allow,
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, HEAD, POST, OPTIONS",
     "Access-Control-Allow-Headers": "content-type",
     "Vary": "Origin",
   };
