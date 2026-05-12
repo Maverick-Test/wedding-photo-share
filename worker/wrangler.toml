@@ -11,7 +11,7 @@ PUBLIC_BASE_URL = "" # Optional. If set, /list returns URLs like {PUBLIC_BASE_UR
 MAX_UPLOAD_BYTES = "52428800" # 50 MB
 # After this UTC timestamp, /upload returns 403. /list and /photo keep working.
 # Leave empty to allow uploads forever. Format: "2026-06-15T23:59:59Z"
-UPLOAD_DEADLINE = ""
+UPLOAD_DEADLINE = "2026-05-23T03:59:59Z"  # = May 22, 2026 11:59 PM ET (7 days after May 15)
 
 [[r2_buckets]]
 binding = "PHOTOS"
